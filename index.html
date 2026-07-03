@@ -5,93 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Physically Scaled Tree Network Simulator</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        canvas { background-color: #0f172a; cursor: default; }
+        canvas#netCanvas { 
+            background-color: #1c1917; /* Dark stone */
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            cursor: default; 
+        }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-6">
+<body class="bg-stone-900 text-stone-100 min-h-screen p-4 md:p-6 font-sans">
 
-    <div class="max-w-7xl mx-auto bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-700 grid grid-cols-1 lg:grid-cols-12">
+    <div class="max-w-7xl mx-auto bg-stone-800 rounded-2xl shadow-2xl overflow-hidden border border-stone-700 grid grid-cols-1 lg:grid-cols-12">
         
-        <div class="lg:col-span-4 p-6 bg-slate-850 border-r border-slate-700 flex flex-col justify-between space-y-6">
+        <div class="lg:col-span-4 p-6 bg-stone-800 border-r border-stone-700 flex flex-col justify-between space-y-6">
             <div>
-                <h1 class="text-xl font-bold text-emerald-400 border-b border-slate-700 pb-2 mb-2">🌲 Specialized Tree Network Sim</h1>
-                <p class="text-xs text-slate-400 mb-4">Click to spawn trees. Drag Green centers to reposition trees. Drag Yellow spots to alter baseline distance.</p>
+                <h1 class="text-xl font-bold text-emerald-500 border-b border-stone-700 pb-2 mb-2 font-serif tracking-wide">Tree Inventory Simulator</h1>
+                <p class="text-xs text-stone-400 mb-4">Click to spawn trees. Drag red centers to reposition trees. Left click yellow spots to alter height measurement distance. Right click yellow spots to rotate around tree.</p>
                 
-                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 mb-4 space-y-3">
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">1. New Tree Spawn Template</span>
+                <div class="bg-stone-800 p-3 rounded-xl border border-stone-700 mb-4 space-y-3 shadow-inner">
+                    <span class="block text-xs font-bold text-stone-400 uppercase tracking-wider">1. New Tree Spawn Template</span>
                     <div>
-                        <label class="flex justify-between text-xs">Height (Baseline Dist): <span id="val_height" class="font-bold text-emerald-400">18 m</span></label>
-                        <input type="range" id="next_height" min="5" max="40" value="18" class="w-full accent-emerald-500">
+                        <label class="flex justify-between text-xs">Height (Baseline Dist): <span id="val_height" class="font-bold text-emerald-500">18 m</span></label>
+                        <input type="range" id="next_height" min="5" max="40" value="18" class="w-full accent-emerald-600">
                     </div>
                     <div>
-                        <label class="flex justify-between text-xs">Crown Spread (Crosshairs): <span id="val_spread" class="font-bold text-emerald-400">12 m</span></label>
-                        <input type="range" id="next_spread" min="4" max="30" value="12" class="w-full accent-emerald-500">
+                        <label class="flex justify-between text-xs">Crown Spread (Crosshairs): <span id="val_spread" class="font-bold text-emerald-500">12 m</span></label>
+                        <input type="range" id="next_spread" min="4" max="30" value="12" class="w-full accent-emerald-600">
                     </div>
                 </div>
 
-                <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 mb-4 space-y-3">
-                    <span class="block text-xs font-bold text-slate-400 uppercase tracking-wider">2. Crew & Constraints Setup</span>
+                <div class="bg-stone-800 p-3 rounded-xl border border-stone-700 mb-4 space-y-3 shadow-inner">
+                    <span class="block text-xs font-bold text-stone-400 uppercase tracking-wider">2. Crew & Constraints Setup</span>
                     <div>
                         <label class="block text-xs mb-1">Total Crew Size (K Fleet):</label>
-                        <input type="number" id="sim_workers" value="4" min="1" max="12" onchange="updateCrewCompositionDisplay()" class="w-full bg-slate-900 border border-slate-600 rounded px-2 py-1 text-sm text-white">
-                        <div id="crew_split_badge" class="text-[11px] text-slate-400 mt-1.5 font-mono">
+                        <input type="number" id="sim_workers" value="4" min="1" max="12" onchange="updateCrewCompositionDisplay()" class="w-full bg-stone-900 border border-stone-600 rounded px-2 py-1 text-sm text-white">
+                        <div id="crew_split_badge" class="text-[11px] text-stone-400 mt-1.5 font-mono">
                             Composition: 2 Tape Specialists | 2 Wheel Specialists
                         </div>
                     </div>
                     <div class="pt-1">
                         <label class="block text-xs mb-1">Max Concurrent Active Trees:</label>
-                        <input type="range" id="sim_max_trees" min="1" max="10" value="4" class="w-full accent-blue-500">
-                        <div class="text-right text-xs text-blue-400 font-bold">Limit: <span id="val_max_trees">4</span> trees at once</div>
+                        <input type="range" id="sim_max_trees" min="1" max="10" value="4" class="w-full accent-emerald-600">
+                        <div class="text-right text-xs text-emerald-500 font-bold">Limit: <span id="val_max_trees">4</span> trees at once</div>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 mb-2">
-                    <button onclick="toggleSim()" id="btn_play" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg transition cursor-pointer">▶ Start Sim</button>
-                    <button onclick="resetSim()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 px-4 rounded-lg transition cursor-pointer">🔄 Reset</button>
+                    <button onclick="toggleSim()" id="btn_play" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2 px-4 rounded-lg transition cursor-pointer shadow-md">▶ Start Sim</button>
+                    <button onclick="resetSim()" class="bg-stone-700 hover:bg-stone-600 text-stone-200 font-semibold py-2 px-4 rounded-lg transition cursor-pointer shadow-md">🔄 Reset</button>
                 </div>
-                <button onclick="generateRandomDataset()" class="w-full bg-blue-900/40 hover:bg-blue-900/60 text-blue-300 border border-blue-700/50 font-medium py-1.5 px-4 rounded-lg text-xs transition cursor-pointer">🎲 Scatter 10 Test Trees</button>
+                <button onclick="generateRandomDataset()" class="w-full bg-stone-700 hover:bg-stone-600 text-stone-300 border border-stone-600 font-medium py-1.5 px-4 rounded-lg text-xs transition cursor-pointer">Scatter 10 Test Trees</button>
             </div>
 
-            <div class="bg-slate-950 p-4 rounded-xl space-y-2.5 font-mono text-xs border border-slate-800">
-                <h3 class="text-slate-400 border-b border-slate-800 pb-1 font-bold uppercase tracking-wider">Telemetry Panel</h3>
-                <div class="flex justify-between"><span>Total Stand Inventory:</span><span id="stat_total" class="text-blue-400">0</span></div>
-                <div class="flex justify-between"><span>Active Trees:</span><span id="stat_active" class="text-amber-400">0</span></div>
-                <div class="flex justify-between"><span>Completed Stand:</span><span id="stat_done" class="text-emerald-400">0</span></div>
-                <div class="flex justify-between border-t border-slate-800 pt-2 text-slate-400"><span>Physical Scaling Constraints:</span></div>
-                <div class="flex justify-between text-slate-400 pl-2"><span>Target Walking Velocity:</span><span class="text-slate-200">80 m/min</span></div>
-                <div class="flex justify-between text-slate-400 pl-2"><span>Engine Map Scaling:</span><span class="text-slate-200">2.5 px = 1 m</span></div>
-                <div class="flex justify-between border-t border-slate-800 pt-2 font-bold text-sm">
+            <div class="bg-stone-950 p-4 rounded-xl space-y-2.5 font-mono text-xs border border-stone-800 shadow-inner">
+                <h3 class="text-stone-400 border-b border-stone-800 pb-1 font-bold uppercase tracking-wider">Telemetry Panel</h3>
+                <div class="flex justify-between"><span>Total Stand Inventory:</span><span id="stat_total" class="text-stone-300">0</span></div>
+                <div class="flex justify-between"><span>Active Trees:</span><span id="stat_active" class="text-amber-500">0</span></div>
+                <div class="flex justify-between"><span>Completed Stand:</span><span id="stat_done" class="text-emerald-500">0</span></div>
+                
+                <div class="flex justify-between border-t border-stone-800 pt-2 text-stone-400"><span>Physical Scaling:</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Target Velocity:</span><span class="text-stone-200">25 m/min</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Map Scaling:</span><span class="text-stone-200">2.5 px = 1 m</span></div>
+                
+                <div class="flex justify-between border-t border-stone-800 pt-2 text-stone-400"><span>Cumulative Crew Time:</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Total Measuring:</span><span id="stat_time_measuring" class="text-emerald-500">0.0 min</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Total Moving:</span><span id="stat_time_moving" class="text-amber-500">0.0 min</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Total Idle:</span><span id="stat_time_idle" class="text-stone-500">0.0 min</span></div>
+                <div class="flex justify-between text-stone-400 pl-2"><span>Total Congested:</span><span id="stat_time_waiting" class="text-red-500">0.0 min</span></div>
+
+                <div class="flex justify-between border-t border-stone-800 pt-2 font-bold text-sm">
                     <span>Operational Time:</span><span id="stat_time" class="text-white">00h 00m</span>
                 </div>
             </div>
         </div>
 
-        <div class="lg:col-span-8 p-4 flex flex-col justify-between space-y-4">
+        <div class="lg:col-span-8 p-4 flex flex-col space-y-4 h-full overflow-y-auto">
             <div>
                 <div class="flex justify-between items-center mb-2">
-                    <span class="text-xs text-slate-400 font-medium">Workers layout walk lines dynamically at 80 m/min scale based on actual dimensions.</span>
+                    <span class="text-xs text-stone-400 font-medium">Workers layout walk lines dynamically based on actual dimensions. </span>
                     <button onclick="clearCanvas()" class="text-xs text-red-400 hover:underline cursor-pointer">Clear Map</button>
                 </div>
                 
-                <div class="relative w-full overflow-hidden border border-slate-700 rounded-xl shadow-inner mb-2">
+                <div class="relative w-full overflow-hidden border border-stone-700 rounded-xl shadow-inner mb-2">
                     <canvas id="netCanvas" width="850" height="420" class="w-full h-auto block"></canvas>
                 </div>
                 
-                <div class="flex flex-wrap gap-4 text-[11px] text-slate-400 bg-slate-850 p-2 rounded-lg border border-slate-700">
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Trunk (Tape Sub-Task Target)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Height Node (Wheel Sub-Task Target)</div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-400 inline-block"></span> Wheel Specialist Active</div>
-                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-400 inline-block"></span> Tape Specialist Active</div>
+                <div class="flex flex-wrap gap-4 text-[11px] text-stone-400 bg-stone-800 p-2 rounded-lg border border-stone-700 shadow-sm">
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-900 inline-block"></span> Trunk (Tape Target)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> Height Node (Wheel Target)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span> Wheel Specialist (High-Vis Orange)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Tape Specialist (High-Vis Yellow)</div>
                 </div>
             </div>
 
-            <div class="bg-slate-850 p-4 rounded-xl border border-slate-700">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                    👷 Live Worker Activity Matrix
-                </h3>
-                <div id="worker_activity_panel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    </div>
+            <div class="bg-stone-800 p-4 rounded-xl border border-stone-700 shadow-md">
+                <h3 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Live Worker Activity Matrix</h3>
+                <div id="worker_activity_panel" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+            </div>
+
+            <div class="bg-stone-800 p-4 rounded-xl border border-stone-700 shadow-md flex-grow">
+                <h3 class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-3">Activity Status Over Time</h3>
+                <div class="relative w-full h-48">
+                    <canvas id="activityChart"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -107,11 +127,10 @@
         ss.oninput = () => document.getElementById('val_spread').innerText = ss.value + " m";
         smt.oninput = () => document.getElementById('val_max_trees').innerText = smt.value;
 
-        // PHYSICAL SCALING FACTORS
+        // PHYSICAL SCALING FACTORS - ADJUSTED FOR REAL WORLD TIME
         const SCALE_PX_PER_METER = 2.5; 
-        const WALKING_SPEED_M_PER_MIN = 80;
-        const SIM_DT_MINUTES = 0.02; // Time elapsed per frame loop execution
-        // Frame velocity calculations: (80m/min * 2.5px/m) * 0.02 min/frame = 4.0 px/frame
+        const WALKING_SPEED_M_PER_MIN = 25; // Effective Operational Field Speed
+        const SIM_DT_MINUTES = 0.075;         // Scaled Up Engine Speed
         const FRAME_MOVE_SPEED_PX = (WALKING_SPEED_M_PER_MIN * SCALE_PX_PER_METER) * SIM_DT_MINUTES; 
 
         let trees = [];
@@ -120,9 +139,57 @@
         let simRunning = false;
         let globalClockMinutes = 0;
 
+        // Cumulative Telemetry
+        let cumulativeMeasuringTime = 0;
+        let cumulativeMovingTime = 0;
+        let cumulativeIdleTime = 0;
+        let cumulativeWaitingTime = 0;
+
         let isDragging = false;
         let draggedTree = null;
         let dragType = null; 
+
+        // Charting Variables
+        let chartInstance = null;
+        let lastLogTime = -1;
+
+        function initChart() {
+            const ctxChart = document.getElementById('activityChart').getContext('2d');
+            chartInstance = new Chart(ctxChart, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Measuring', borderColor: '#10b981', backgroundColor: '#10b981', data: [], fill: false, tension: 0.2, pointRadius: 1 },
+                        { label: 'Moving', borderColor: '#f59e0b', backgroundColor: '#f59e0b', data: [], fill: false, tension: 0.2, pointRadius: 1 },
+                        { label: 'Idle', borderColor: '#78716c', backgroundColor: '#78716c', data: [], fill: false, tension: 0.2, pointRadius: 1 },
+                        { label: 'Waiting/Congested', borderColor: '#ef4444', backgroundColor: '#ef4444', data: [], fill: false, tension: 0.2, pointRadius: 1 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false, 
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            suggestedMax: parseInt(document.getElementById('sim_workers').value),
+                            ticks: { color: '#a8a29e', stepSize: 1 },
+                            grid: { color: '#44403c' }
+                        },
+                        x: { 
+                            ticks: { color: '#a8a29e', maxTicksLimit: 15 },
+                            grid: { color: '#44403c' }
+                        }
+                    },
+                    plugins: { 
+                        legend: { labels: { color: '#e7e5e4', boxWidth: 12 } } 
+                    }
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', initChart);
 
         class Tree {
             constructor(id, x, y, height, spread) {
@@ -160,13 +227,11 @@
                 this.id = id;
                 this.x = startX;
                 this.y = startY;
-                this.specialty = specialty; // Permanent Tool assignment: 'tape' or 'wheel'
+                this.specialty = specialty; 
                 this.lastTreeId = null;
                 this.targetTree = null;
                 this.targetPointType = null; 
                 this.status = 'idle'; 
-                
-                // Measurement layout routing states
                 this.measurePhase = 0; 
                 this.measureAngle = 0; 
             }
@@ -176,23 +241,17 @@
                     this.findOptimalNextTask();
                 }
 
-                // Standard Transit Navigation Block
                 if (this.status === 'moving' && this.targetTree) {
                     let destX = this.targetPointType === 'trunk' ? this.targetTree.x : this.targetTree.heightNodeX;
                     let destY = this.targetPointType === 'trunk' ? this.targetTree.y : this.targetTree.heightNodeY;
                     
-                    let dx = destX - this.x;
-                    let dy = destY - this.y;
+                    let dx = destX - this.x; let dy = destY - this.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
 
                     if (distance > FRAME_MOVE_SPEED_PX) { 
-                        this.x += (dx / distance) * FRAME_MOVE_SPEED_PX;
-                        this.y += (dy / distance) * FRAME_MOVE_SPEED_PX;
-                        
+                        this.x += (dx / distance) * FRAME_MOVE_SPEED_PX; this.y += (dy / distance) * FRAME_MOVE_SPEED_PX;
                     } else {
-                        this.x = destX;
-                        this.y = destY;
-                        this.status = 'arrived';
+                        this.x = destX; this.y = destY; this.status = 'arrived';
                     }
                 }
 
@@ -205,82 +264,55 @@
                             this.targetTree.status = 'active';
                         } else {
                             this.status = 'waiting_capacity';
-                            
                             return;
                         }
                     }
 
                     if (this.targetTree.status === 'active') {
                         this.status = 'measuring';
-                        this.measurePhase = 1; // Begin dedicated specialized physical field layout paths
+                        this.measurePhase = 1; 
                         this.measureAngle = 0;
                     }
-                    
                 }
 
-                // PHYSICALLY TRACKED FIELD MEASUREMENT LAYOUT PATTERNS
                 if (this.status === 'measuring') {
-                    
                     let t = this.targetTree;
 
                     if (this.specialty === 'wheel') {
                         let radius = t.spread * 1.3;
-                        
                         if (this.measurePhase === 1) {
-                            // Phase 1: Walk from the Height Baseline Node directly to the trunk center
                             let dx = t.x - this.x; let dy = t.y - this.y;
                             let dist = Math.sqrt(dx*dx + dy*dy);
                             if (dist > FRAME_MOVE_SPEED_PX) {
                                 this.x += (dx / dist) * FRAME_MOVE_SPEED_PX; this.y += (dy / dist) * FRAME_MOVE_SPEED_PX;
                             } else {
-                                this.x = t.x; this.y = t.y; this.measurePhase = 2; // Transition to pacing crosshairs
+                                this.x = t.x; this.y = t.y; this.measurePhase = 2;
                             }
                         } else if (this.measurePhase === 2) {
-                            // Phase 2: Pace Left across the crown diameter horizontal boundary
-                            let targetX = t.x - radius;
-                            let dx = targetX - this.x;
-                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) {
-                                this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX;
-                            } else {
-                                this.x = targetX; this.measurePhase = 3;
-                            }
+                            let targetX = t.x - radius; let dx = targetX - this.x;
+                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) { this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX; } 
+                            else { this.x = targetX; this.measurePhase = 3; }
                         } else if (this.measurePhase === 3) {
-                            // Phase 3: Pace completely from the Left Edge over to the Right Edge
-                            let targetX = t.x + radius;
-                            let dx = targetX - this.x;
-                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) {
-                                this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX;
-                            } else {
-                                this.x = targetX; this.measurePhase = 4;
-                            }
+                            let targetX = t.x + radius; let dx = targetX - this.x;
+                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) { this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX; } 
+                            else { this.x = targetX; this.measurePhase = 4; }
                         } else if (this.measurePhase === 4) {
-                            // Phase 4: Walk back to the trunk center node to finalize calculations
                             let dx = t.x - this.x;
-                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) {
-                                this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX;
-                            } else {
+                            if (Math.abs(dx) > FRAME_MOVE_SPEED_PX) { this.x += Math.sign(dx) * FRAME_MOVE_SPEED_PX; } 
+                            else {
                                 this.x = t.x;
-                                // Complete Subtask
                                 t.wheelDone = true; t.wheelWorker = null;
                                 this.finalizeMeasurementTask();
                             }
                         }
-
                     } else if (this.specialty === 'tape') {
-                        // Tight orbital loop wrapping pattern around the DBH node center
                         let orbitRadius = 11;
-                        let circumferenceLength = 2 * Math.PI * orbitRadius;
-                        // Execute 2 complete orbital wraps for field security tracking
-                        let totalNeededDistance = circumferenceLength * 2.0; 
-                        
-                        // Radians advanced based on scaled step velocity matching 80m/min
                         let angleStep = FRAME_MOVE_SPEED_PX / orbitRadius;
                         this.measureAngle += angleStep;
-
                         this.x = t.x + Math.cos(this.measureAngle) * orbitRadius;
                         this.y = t.y + Math.sin(this.measureAngle) * orbitRadius;
 
-                        if (this.measureAngle >= Math.PI * 2.0) { // 1 complete circumferences walked
+                        if (this.measureAngle >= Math.PI * 2.0) { 
                             t.tapeDone = true; t.tapeWorker = null;
                             this.finalizeMeasurementTask();
                         }
@@ -289,31 +321,28 @@
             }
 
             finalizeMeasurementTask() {
-                if (this.targetTree.tapeDone && this.targetTree.wheelDone) {
-                    this.targetTree.status = 'done';
-                }
+                if (this.targetTree.tapeDone && this.targetTree.wheelDone) { this.targetTree.status = 'done'; }
                 this.lastTreeId = this.targetTree.id;
-                this.status = 'idle';
-                this.targetTree = null;
-                this.targetPointType = null;
-                this.measurePhase = 0;
-                this.measureAngle = 0;
+                this.status = 'idle'; this.targetTree = null; this.targetPointType = null;
+                this.measurePhase = 0; this.measureAngle = 0;
             }
 
             findOptimalNextTask() {
-                let nearestTree = null;
-                let selectedType = null;
-                let minDist = Infinity;
+                let nearestTree = null; let selectedType = null; let minDist = Infinity;
+                let activeTreesCount = trees.filter(t => t.status !== 'done' && (t.tapeWorker !== null || t.wheelWorker !== null || t.tapeDone || t.wheelDone)).length;
+                const maxAllowedActive = parseInt(smt.value);
+                let maxLimitReached = activeTreesCount >= maxAllowedActive;
 
                 trees.forEach(t => {
                     if (t.status !== 'done') {
-                        // Tape Specialists exclusively map trunks
+                        let isTreeActive = t.tapeWorker !== null || t.wheelWorker !== null || t.tapeDone || t.wheelDone;
+                        if (maxLimitReached && !isTreeActive) return; 
+
                         if (this.specialty === 'tape' && !t.tapeDone && t.tapeWorker === null) {
                             let dx = t.x - this.x; let dy = t.y - this.y;
                             let d = Math.sqrt(dx * dx + dy * dy);
                             if (d < minDist) { minDist = d; nearestTree = t; selectedType = 'trunk'; }
                         }
-                        // Wheel Specialists exclusively map calculations lines
                         if (this.specialty === 'wheel' && !t.wheelDone && t.wheelWorker === null) {
                             let dx = t.heightNodeX - this.x; let dy = t.heightNodeY - this.y;
                             let d = Math.sqrt(dx * dx + dy * dy);
@@ -323,13 +352,8 @@
                 });
 
                 if (nearestTree) {
-                    this.targetTree = nearestTree;
-                    this.targetPointType = selectedType;
-                    this.status = 'moving';
-                    
-                    if (selectedType === 'trunk') this.targetTree.tapeWorker = this.id;
-                    else this.targetTree.wheelWorker = this.id;
-
+                    this.targetTree = nearestTree; this.targetPointType = selectedType; this.status = 'moving';
+                    if (selectedType === 'trunk') this.targetTree.tapeWorker = this.id; else this.targetTree.wheelWorker = this.id;
                     if (this.lastTreeId) {
                         traversedEdges.add(`${this.lastTreeId}->${this.targetTree.id}`);
                         traversedEdges.add(`${this.targetTree.id}->${this.lastTreeId}`);
@@ -338,30 +362,30 @@
             }
         }
 
-        // --- DEPLOYMENT AND MANAGEMENT CONFIGURATIONS ---
         function updateCrewCompositionDisplay() {
             let k = parseInt(document.getElementById('sim_workers').value) || 4;
-            let wheelSpecs = Math.floor(k / 2);
-            let tapeSpecs = k - wheelSpecs;
+            let tapeSpecs = Math.floor(k / 2);
+            let wheelSpecs = k - tapeSpecs;
             document.getElementById('crew_split_badge').innerText = `Composition: ${tapeSpecs} Tape Specs | ${wheelSpecs} Wheel Specs`;
+            
+            if (chartInstance) {
+                chartInstance.options.scales.y.suggestedMax = k;
+                chartInstance.update();
+            }
         }
 
         function initSimulationEngine() {
             const K = parseInt(document.getElementById('sim_workers').value) || 4;
             traversedEdges.clear();
-
             workers = [];
             for (let i = 0; i < K; i++) {
-                // Alternating allocations provides crisp task distribution patterns
                 let specialty = (i % 2 === 0) ? 'tape' : 'wheel';
                 workers.push(new Worker(i + 1, 40, canvas.height - 40, specialty));
             }
         }
 
         function toggleSim() {
-            if (trees.length === 0) {
-                alert("Please add some trees to the network board first!"); return;
-            }
+            if (trees.length === 0) { alert("Please add some trees to the network board first!"); return; }
             if (workers.length === 0) initSimulationEngine();
             simRunning = !simRunning;
             document.getElementById('btn_play').innerText = simRunning ? "⏸ Pause Sim" : "▶ Resume Sim";
@@ -369,14 +393,24 @@
         }
 
         function resetSim() {
-            simRunning = false; globalClockMinutes = 0;
+            simRunning = false; globalClockMinutes = 0; lastLogTime = -1;
+            cumulativeMeasuringTime = 0; cumulativeMovingTime = 0;
+            cumulativeIdleTime = 0; cumulativeWaitingTime = 0;
             traversedEdges.clear();
             document.getElementById('btn_play').innerText = "▶ Start Sim";
+            
             trees.forEach(t => {
                 t.status = 'unvisited'; t.tapeDone = false; t.wheelDone = false;
                 t.tapeWorker = null; t.wheelWorker = null;
             });
             workers = [];
+            
+            if (chartInstance) {
+                chartInstance.data.labels = [];
+                chartInstance.data.datasets.forEach(ds => ds.data = []);
+                chartInstance.update();
+            }
+
             updateDashboard(); draw();
         }
 
@@ -391,51 +425,45 @@
             let mins = Math.floor(globalClockMinutes % 60);
             document.getElementById('stat_time').innerText = `${hrs.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m`;
 
+            document.getElementById('stat_time_measuring').innerText = cumulativeMeasuringTime.toFixed(1) + ' min';
+            document.getElementById('stat_time_moving').innerText = cumulativeMovingTime.toFixed(1) + ' min';
+            document.getElementById('stat_time_idle').innerText = cumulativeIdleTime.toFixed(1) + ' min';
+            document.getElementById('stat_time_waiting').innerText = cumulativeWaitingTime.toFixed(1) + ' min';
+
             const panel = document.getElementById('worker_activity_panel');
             if (workers.length === 0) {
-                panel.innerHTML = `<div class="col-span-full text-center text-slate-500 py-2 text-xs italic">Sim not initiated. Click "Start Sim" to mount specialized teams.</div>`;
+                panel.innerHTML = `<div class="col-span-full text-center text-stone-500 py-2 text-xs italic">Sim not initiated. Click "Start Sim" to mount specialized teams.</div>`;
             } else {
                 let html = '';
                 workers.forEach(w => {
-                    let text = ''; let color = '';
-                    let badgeColor = w.specialty === 'wheel' ? 'bg-purple-900/40 text-purple-300 border-purple-700/40' : 'bg-blue-900/40 text-blue-300 border-blue-700/40';
+                    let text = '';
+                    let badgeColor = w.specialty === 'wheel' ? 'bg-orange-900/50 text-orange-400 border-orange-700/50' : 'bg-yellow-900/30 text-yellow-500 border-yellow-700/50';
                     
-                    if (w.status === 'idle') {
-                        text = '🔋 Standby: Awaiting unassigned targets';
-                        color = 'bg-slate-800 text-slate-400';
-                    } else if (w.status === 'moving') {
-                        text = `🚚 Pacing to ${w.targetTree.id} at 80m/min (${w.targetPointType === 'trunk' ? 'Trunk Node' : 'Height Offset'})`;
-                        color = 'bg-amber-600/20 text-amber-400 border-amber-500/30';
-                    } else if (w.status === 'waiting_capacity') {
-                        text = `🛑 Congestion Delay: Site Capacity Cap (${w.targetTree.id})`;
-                        color = 'bg-red-600/20 text-red-400 border-red-500/30';
-                    } else if (w.status === 'measuring') {
+                    if (w.status === 'idle') { text = '🔋 Standby: Awaiting targets'; } 
+                    else if (w.status === 'moving' || w.status === 'arrived') { text = `🚚 Pacing to ${w.targetTree.id} at 25m/min`; } 
+                    else if (w.status === 'waiting_capacity') { text = `🛑 Congestion Delay: Site Capacity Cap (${w.targetTree.id})`; } 
+                    else if (w.status === 'measuring') {
                         if (w.specialty === 'wheel') {
-                            text = w.measurePhase === 1 
-                                ? `📐 ${w.targetTree.id}: Running chain layout baseline` 
-                                : `🌿 ${w.targetTree.id}: Pacing horizontal crown spread width`;
-                            color = 'bg-purple-600/20 text-purple-400 border-purple-500/30';
+                            text = w.measurePhase === 1 ? `📐 ${w.targetTree.id}: Running layout baseline` : `🌿 ${w.targetTree.id}: Pacing horizontal crown spread`;
                         } else {
-                            text = `🔄 ${w.targetTree.id}: Traversing trunk circumference DBH wrap`;
-                            color = 'bg-sky-600/20 text-sky-400 border-sky-500/30';
+                            text = `🔄 ${w.targetTree.id}: Traversing trunk DBH wrap`;
                         }
                     }
                     
                     html += `
-                    <div class="bg-slate-900 border border-slate-700/60 rounded-xl p-3 flex flex-col justify-between shadow-md">
+                    <div class="bg-stone-900 border border-stone-700/60 rounded-xl p-3 flex flex-col justify-between shadow-md">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="font-bold text-xs text-slate-200">Crew #${w.id}</span>
+                            <span class="font-bold text-xs text-stone-200">Crew #${w.id}</span>
                             <span class="text-[9px] px-1.5 py-0.5 rounded border uppercase font-semibold ${badgeColor}">${w.specialty}</span>
                         </div>
-                        <p class="text-[11px] font-sans leading-tight mt-1 min-h-[32px] text-slate-300">${text}</p>
-                        <div class="text-[9px] uppercase font-mono tracking-wider text-right mt-1.5 opacity-60">Status: ${w.status}</div>
+                        <p class="text-[11px] font-sans leading-tight mt-1 min-h-[32px] text-stone-300">${text}</p>
+                        <div class="text-[9px] uppercase font-mono tracking-wider text-right mt-1.5 opacity-60 text-stone-400">Status: ${w.status}</div>
                     </div>`;
                 });
                 panel.innerHTML = html;
             }
         }
 
-        // --- CANVAS RENDERING PIPELINES ---
         function getMousePos(e) {
             const rect = canvas.getBoundingClientRect();
             return {
@@ -444,24 +472,32 @@
             };
         }
 
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
         canvas.addEventListener('mousedown', (e) => {
             if (simRunning) return; 
             const mouse = getMousePos(e);
+            const isRightClick = e.button === 2; 
             
             for (let i = 0; i < trees.length; i++) {
                 let t = trees[i];
                 if (Math.sqrt((mouse.x - t.heightNodeX)**2 + (mouse.y - t.heightNodeY)**2) < 12) {
-                    isDragging = true; draggedTree = t; dragType = 'heightNode'; return;
+                    isDragging = true; draggedTree = t; 
+                    dragType = isRightClick ? 'heightNode_scale' : 'heightNode_rotate'; 
+                    return;
                 }
                 if (Math.sqrt((mouse.x - t.x)**2 + (mouse.y - t.y)**2) < 15) {
-                    isDragging = true; draggedTree = t; dragType = 'trunk'; return;
+                    isDragging = true; draggedTree = t; dragType = 'trunk'; 
+                    return;
                 }
             }
 
-            const h = parseInt(sh.value); const s = parseInt(ss.value);
-            const uniqueId = 'TR' + (trees.length + 1);
-            trees.push(new Tree(uniqueId, mouse.x, mouse.y, h, s));
-            updateDashboard(); draw();
+            if (!isRightClick) {
+                const h = parseInt(sh.value); const s = parseInt(ss.value);
+                const uniqueId = 'TR' + (trees.length + 1);
+                trees.push(new Tree(uniqueId, mouse.x, mouse.y, h, s));
+                updateDashboard(); draw();
+            }
         });
 
         canvas.addEventListener('mousemove', (e) => {
@@ -471,7 +507,14 @@
                     let dx = mouse.x - draggedTree.x; let dy = mouse.y - draggedTree.y;
                     draggedTree.x = mouse.x; draggedTree.y = mouse.y;
                     draggedTree.heightNodeX += dx; draggedTree.heightNodeY += dy;
-                } else {
+                } 
+                else if (dragType === 'heightNode_rotate') {
+                    let angle = Math.atan2(mouse.y - draggedTree.y, mouse.x - draggedTree.x);
+                    const offset = draggedTree.height * SCALE_PX_PER_METER;
+                    draggedTree.heightNodeX = draggedTree.x + offset * Math.cos(angle);
+                    draggedTree.heightNodeY = draggedTree.y + offset * Math.sin(angle);
+                }
+                else if (dragType === 'heightNode_scale') {
                     draggedTree.heightNodeX = mouse.x; draggedTree.heightNodeY = mouse.y;
                     draggedTree.updateHeightFromNodeDistance();
                 }
@@ -483,12 +526,12 @@
 
         function generateRandomDataset() {
             resetSim();
+            const fixedHeight = parseInt(sh.value);
+            const fixedSpread = parseInt(ss.value)
             for (let i = 0; i < 10; i++) {
                 let x = Math.random() * (canvas.width - 250) + 80;
                 let y = Math.random() * (canvas.height - 200) + 50;
-                let h = Math.floor(Math.random() * 20) + 12;
-                let s = Math.floor(Math.random() * 14) + 6;
-                trees.push(new Tree('T' + (i+1), x, y, h, s));
+                trees.push(new Tree('T' + (i+1), x, y, fixedHeight, fixedSpread));
             }
             updateDashboard(); draw();
         }
@@ -496,54 +539,48 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Connective Base Mesh Overlay Array
             for (let i = 0; i < trees.length; i++) {
                 for (let j = i + 1; j < trees.length; j++) {
                     let edgeA = `${trees[i].id}->${trees[j].id}`;
                     let edgeB = `${trees[j].id}->${trees[i].id}`;
-                    ctx.strokeStyle = (traversedEdges.has(edgeA) || traversedEdges.has(edgeB)) ? 'rgba(249, 115, 22, 0.5)' : 'rgba(71, 85, 105, 0.12)';
+                    ctx.strokeStyle = (traversedEdges.has(edgeA) || traversedEdges.has(edgeB)) ? 'rgba(250, 204, 21, 0.4)' : 'rgba(120, 113, 108, 0.15)';
                     ctx.lineWidth = (traversedEdges.has(edgeA) || traversedEdges.has(edgeB)) ? 2.0 : 0.8;
                     ctx.beginPath(); ctx.moveTo(trees[i].x, trees[i].y); ctx.lineTo(trees[j].x, trees[j].y); ctx.stroke();
                 }
             }
 
-            // Spatial Tree Stands
             trees.forEach(t => {
                 const radius = t.spread * 1.3;
                 ctx.beginPath(); ctx.arc(t.x, t.y, radius, 0, Math.PI * 2);
-                ctx.fillStyle = t.status === 'done' ? 'rgba(148, 163, 184, 0.08)' : (t.status === 'active' ? 'rgba(234, 179, 8, 0.08)' : 'rgba(16, 185, 129, 0.12)');
+                ctx.fillStyle = t.status === 'done' ? 'rgba(168, 162, 158, 0.08)' : (t.status === 'active' ? 'rgba(251, 191, 36, 0.08)' : 'rgba(16, 185, 129, 0.12)');
                 ctx.fill();
 
-                // Spread guides
-                ctx.beginPath(); ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)'; ctx.setLineDash([2, 3]);
+                ctx.beginPath(); ctx.strokeStyle = 'rgba(251, 146, 60, 0.25)'; ctx.setLineDash([2, 3]);
                 ctx.moveTo(t.x - radius, t.y); ctx.lineTo(t.x + radius, t.y);
                 ctx.moveTo(t.x, t.y - radius); ctx.lineTo(t.x, t.y + radius);
                 ctx.stroke(); ctx.setLineDash([]);
 
-                // Height offset links
                 ctx.beginPath(); ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)'; ctx.setLineDash([3, 3]);
                 ctx.moveTo(t.x, t.y); ctx.lineTo(t.heightNodeX, t.heightNodeY); ctx.stroke(); ctx.setLineDash([]);
 
-                // Target points
                 ctx.beginPath(); ctx.arc(t.heightNodeX, t.heightNodeY, 5, 0, Math.PI * 2);
-                ctx.fillStyle = t.wheelDone ? '#64748b' : (t.wheelWorker ? '#c084fc' : '#fbbf24');
+                ctx.fillStyle = t.wheelDone ? '#78716c' : (t.wheelWorker ? '#f97316' : '#f59e0b');
                 ctx.fill(); ctx.stroke();
 
                 ctx.beginPath(); ctx.arc(t.x, t.y, 6, 0, Math.PI * 2);
-                ctx.fillStyle = t.tapeDone ? '#64748b' : (t.tapeWorker ? '#38bdf8' : '#ef4444');
+                ctx.fillStyle = t.tapeDone ? '#78716c' : (t.tapeWorker ? '#facc15' : '#7c2d12');
                 ctx.fill(); ctx.stroke();
 
-                ctx.fillStyle = '#94a3b8'; ctx.font = '10px monospace';
+                ctx.fillStyle = '#a8a29e'; ctx.font = '10px monospace';
                 ctx.fillText(`${t.id} (H:${t.height}m, S:${t.spread}m)`, t.x - 35, t.y - radius - 6);
             });
 
-            // Operating Crews
             workers.forEach(w => {
                 ctx.beginPath(); ctx.arc(w.x, w.y, 8, 0, Math.PI * 2);
-                ctx.fillStyle = w.status === 'measuring' ? (w.specialty === 'wheel' ? '#c084fc' : '#38bdf8') : (w.status === 'moving' ? '#fbbf24' : '#64748b');
-                ctx.fill(); ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.fillStyle = w.status === 'measuring' ? (w.specialty === 'wheel' ? '#f97316' : '#facc15') : (w.status === 'moving' ? '#f59e0b' : '#78716c');
+                ctx.fill(); ctx.strokeStyle = '#1c1917'; ctx.lineWidth = 1.5; ctx.stroke();
                 
-                ctx.fillStyle = '#0f172a'; ctx.font = 'bold 9px sans-serif';
+                ctx.fillStyle = '#1c1917'; ctx.font = 'bold 9px sans-serif';
                 ctx.fillText(w.specialty === 'wheel' ? 'W' : 'T', w.x - 4, w.y + 3);
             });
         }
@@ -553,9 +590,42 @@
             globalClockMinutes += SIM_DT_MINUTES;
             let isComplete = trees.length > 0 && trees.every(t => t.status === 'done');
             
+            // Accumulate cumulative crew time
+            workers.forEach(w => {
+                if (w.status === 'measuring') {
+                    cumulativeMeasuringTime += SIM_DT_MINUTES;
+                } else if (w.status === 'moving' || w.status === 'arrived') {
+                    cumulativeMovingTime += SIM_DT_MINUTES;
+                } else if (w.status === 'idle') {
+                    cumulativeIdleTime += SIM_DT_MINUTES;
+                } else if (w.status === 'waiting_capacity') {
+                    cumulativeWaitingTime += SIM_DT_MINUTES;
+                }
+            });
+
             workers.forEach(w => w.update());
             updateDashboard(); draw();
 
+            // CHART LOGGING LOOP
+            if (Math.floor(globalClockMinutes) > lastLogTime && chartInstance) {
+                lastLogTime = Math.floor(globalClockMinutes);
+                
+                let measuring = 0, moving = 0, idle = 0, waiting = 0;
+                workers.forEach(w => {
+                    if (w.status === 'measuring') measuring++;
+                    else if (w.status === 'moving' || w.status === 'arrived') moving++;
+                    else if (w.status === 'idle') idle++;
+                    else if (w.status === 'waiting_capacity') waiting++;
+                });
+
+                chartInstance.data.labels.push(lastLogTime + 'm');
+                chartInstance.data.datasets[0].data.push(measuring);
+                chartInstance.data.datasets[1].data.push(moving);
+                chartInstance.data.datasets[2].data.push(idle);
+                chartInstance.data.datasets[3].data.push(waiting);
+                
+                chartInstance.update();
+            }
 
             if (isComplete) {
                 simRunning = false;
@@ -569,19 +639,19 @@
         updateCrewCompositionDisplay();
         draw();
     </script>
-    <div class="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg shadow-sm">
-    <h3 class="text-lg font-bold text-blue-900 mb-2">
-        📝 Student Lab Worksheet
-    </h3>
-    <p class="text-blue-800 text-sm mb-4">
-        Step into the role of a field operations manager! Use this simulator as an interactive sandbox to complete our companion lab on routing efficiency, bottlenecks, and the Greedy Algorithm.
-    </p>
-    <a href="https://docs.google.com/document/d/1j-dpoMazgDfuubcuNe6mywUsZYxDWoBgSY5x5-vGpug/copy" 
-       target="_blank" 
-       rel="noopener noreferrer" 
-       class="inline-block px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded shadow hover:bg-blue-700 transition-colors">
-       Make a Copy (Google Docs)
-    </a>
-</div>
+    <div class="mt-6 p-5 bg-stone-800 border border-stone-700 rounded-lg shadow-sm">
+        <h3 class="text-lg font-bold text-stone-200 mb-2 flex items-center gap-2">
+            Student Lab Worksheet
+        </h3>
+        <p class="text-stone-400 text-sm mb-4">
+            Step into the role of a field operations manager! Use this simulator as an interactive sandbox to complete our companion lab on routing efficiency, bottlenecks, and the Greedy Algorithm.
+        </p>
+        <a href="https://docs.google.com/document/d/1j-dpoMazgDfuubcuNe6mywUsZYxDWoBgSY5x5-vGpug/copy" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="inline-block px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded shadow hover:bg-emerald-700 transition-colors">
+           Make a Copy (Google Docs)
+        </a>
+    </div>
 </body>
 </html>
