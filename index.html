@@ -71,15 +71,15 @@
                 <div class="flex justify-between text-stone-400 pl-2"><span>Target Velocity:</span><span class="text-stone-200">25 m/min</span></div>
                 <div class="flex justify-between text-stone-400 pl-2"><span>Map Scaling:</span><span class="text-stone-200">2.5 px = 1 m</span></div>
                 
-                <div class="flex justify-between border-t border-stone-800 pt-2 text-stone-400"><span>Cumulative Crew Time:</span></div>
+                <div class="flex justify-between border-t border-stone-800 pt-2 text-stone-400"><span>Cumulative Crew Time</span></div>
                 <div class="flex justify-between text-stone-400 pl-2"><span>Total Measuring:</span><span id="stat_time_measuring" class="text-emerald-500">0.0 min</span></div>
                 <div class="flex justify-between text-stone-400 pl-2"><span>Total Moving:</span><span id="stat_time_moving" class="text-amber-500">0.0 min</span></div>
                 <div class="flex justify-between text-stone-400 pl-2"><span>Total Idle:</span><span id="stat_time_idle" class="text-stone-500">0.0 min</span></div>
                 <div class="flex justify-between text-stone-400 pl-2"><span>Total Congested:</span><span id="stat_time_waiting" class="text-red-500">0.0 min</span></div>
 
                 <div class="flex justify-between border-t border-stone-800 pt-2 font-bold text-sm">
-                    <span>Operational Time:</span><span id="stat_time" class="text-white">00h 00m</span>
-                    <span>Cummulative Time:</span><span id="stat_time_cummulative" class="text-white">00h 00m</span>
+                    <span>Op.Time:</span><span id="stat_time" class="text-white">00h 00m</span>
+                    <span>Cum. Time:</span><span id="stat_time_cummulative" class="text-white">00h 00m</span>
                 </div>
             </div>
         </div>
@@ -426,8 +426,9 @@
             let mins = Math.floor(globalClockMinutes % 60);
             document.getElementById('stat_time').innerText = `${hrs.toString().padStart(2, '0')}h ${mins.toString().padStart(2, '0')}m`;
             let totalTime = cumulativeMeasuringTime + cumulativeMovingTime + cumulativeIdleTime + cumulativeWaitingTime;
-            let totalHours =  Math.floor(totalTime % 60);
-            let totalMinutes = Math.floor(totalTime / 60);
+            console.log(totalTime);
+            let totalHours =  Math.floor(totalTime / 60);
+            let totalMinutes = Math.floor(totalTime % 60);
             document.getElementById('stat_time_cummulative').innerText = `${totalHours.toString().padStart(2, '0')}h ${totalMinutes.toString().padStart(2, '0')}m`;
 
             document.getElementById('stat_time_measuring').innerText = cumulativeMeasuringTime.toFixed(1) + ' min';
